@@ -98,10 +98,11 @@ public class DownloadService {
 
     private void executeDownloadComman(String originalUrl){
 
-        String command = "yt-dlp -o \"downloads/%(title)s.%(ext)s\" " + originalUrl; // Comando para baixar o vídeo
+        String command = "/usr/local/bin/yt-dlp -o \"downloads/%(title)s.%(ext)s\" " + originalUrl;  // Comando para baixar o vídeo
+       
 
         try{
-            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command); // Executa o download
+            ProcessBuilder processBuilder = new ProcessBuilder(command); // Executa o download
             processBuilder.inheritIO(); // Permite visualizar a saída do comando no console
             Process process = processBuilder.start(); // Executa o processo
             int exitCode = process.waitFor(); // Aguarda a conclusão
