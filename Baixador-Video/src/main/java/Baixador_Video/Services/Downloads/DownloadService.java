@@ -7,21 +7,45 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import Baixador_Video.Entities.Download;
+import Baixador_Video.Entities.DownloadStatus;
 import Baixador_Video.Exceptions.DownloadException;
 import Baixador_Video.Exceptions.UrlException;
-import Baixador_Video.Repositories.UrlRepository;
+import Baixador_Video.Repositories.DownloadlRepository;
 
 @Service
 public class DownloadService {
     
     @Autowired
-    UrlRepository urlRepository;
+    DownloadlRepository downloadlRepository;
 
     private String domains[] = {"youtube.com", "youtu.be", "vimeo.com"};
+
+    @Transactional(readOnly = true)
+    public Page<Download> getAllDownloads(Pageable pageable){
+        return downloadlRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+        public Page<Download> findDownloadByStatus(DownloadStatus status, Pageable pageable){
+            return downloadlRepository.findDownloadByStatus(status, pageable);
+        }
+
+    @Transactional
+    public void deleteById(Long id){
+
+            if(!downloadlRepository.existsById(id)){
+                throw new DownloadException("Download não encontrado.");
+            }
+
+            downloadlRepository.deleteById(id);
+        }
+    
 
     @Transactional
     public void downloadVideo(String originalUrl){
@@ -38,7 +62,17 @@ public class DownloadService {
         }
 
         prepareDownloadFolder();
-        executeDownloadComman(originalUrl);
+
+        String fileName = "downloads/%(title)s.%(ext)s"; // Nome padrão
+        Download download = new Download(originalUrl, fileName, DownloadStatus.SUCESSO);
+
+        try{
+            executeDownloadComman(originalUrl);
+        }catch(DownloadException e){
+            download.setStatus(DownloadStatus.FALHA);
+        }
+       
+        downloadlRepository.save(download);
     }
 
     private void prepareDownloadFolder(){
@@ -67,7 +101,7 @@ public class DownloadService {
         String command = "yt-dlp -o \"downloads/%(title)s.%(ext)s\" " + originalUrl; // Comando para baixar o vídeo
 
         try{
-            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command); // Chamo o comando no terminal
+            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command); // Executa o download
             processBuilder.inheritIO(); // Permite visualizar a saída do comando no console
             Process process = processBuilder.start(); // Executa o processo
             int exitCode = process.waitFor(); // Aguarda a conclusão
@@ -80,27 +114,13 @@ public class DownloadService {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void validadeUrl(String originalUrl){
 
          try{
             URI uri = new URI(originalUrl); // Cria um objeto URI a partir da URL
             String host = uri.getHost(); // Extrai o host (domínio)
 
-            if (host == null || Arrays.stream(domains).noneMatch(host::contains)) {
+            if(host == null || Arrays.stream(domains).noneMatch(host::contains)) {
                 throw new UrlException("URL não pertence a um site suportado.");
             }
 

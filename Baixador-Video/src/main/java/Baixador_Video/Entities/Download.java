@@ -1,6 +1,8 @@
 package Baixador_Video.Entities;
 
-import java.util.Date;
+
+
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,17 +24,25 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
-public class Url {
+public class Download {
     
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String originalUrl;
-    private String shortName;
+    private String fileName;
 
     @Enumerated(EnumType.STRING)
-    private UrlStatus urlStatus;
+    private DownloadStatus status;
 
-    private Date createdAt;
+    private LocalDateTime timesTamp;
+
+    public Download(String url, String fileName, DownloadStatus status){
+        this.originalUrl = url;
+        this.fileName = fileName;
+        this.timesTamp = LocalDateTime.now();
+        this.status = status;
+    }
 
 }
