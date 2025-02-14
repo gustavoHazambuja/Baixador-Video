@@ -10,7 +10,7 @@ Baixador de vídeo é uma aplicação backend. A aplicação consiste em um soft
 ## Back end
 - Java
 - Spring Boot
-- JPA
+- JPA / Hibernate
 - Maven
 
 ## Implantação em produção
